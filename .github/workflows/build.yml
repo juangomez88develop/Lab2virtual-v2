@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           #Set artifact name
-          name: artifact
+          name: jar-artifact
           #From this path
           path: target/lab2virtualv2-0.0.1-SNAPSHOT.jar
       - name: Build & push Docker image
