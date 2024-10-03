@@ -73,46 +73,38 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  #Build's job
-  jobs:
-    #Build's job
-    build:
-      #Depends on sonar's job
-      needs: sonar
-      name: Build
-      #Run on Ubuntu using the latest version
-      runs-on: ubuntu-latest
-      steps:
-        #Check-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
-        - uses: actions/checkout@v1
-
-        # Set up JDK 11
-        - name: Set up JDK
-          uses: actions/setup-java@v1
-          with:
-            java-version: '11'
-
-        # Cache Maven packages
-        - name: Cache Maven packages
-          uses: actions/cache@v1
-          with:
-            path: ~/.m2
-            key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-            restore-keys: ${{ runner.os }}-m2
-
-        # Build the application using Maven
-        - name: Build with Maven
-          run: mvn -B package -DskipTests --file pom.xml
-
-        # Build & push Docker image
-        - name: Build & push Docker image
-          uses: mr-smithers-excellent/docker-build-push@v6
-          with:
-            image: juangomez112/lab2virtual-v2
-            tags: latest
-            registry: docker.io
-            dockerfile: Dockerfile
-            username: ${{ secrets.DOCKER_USERNAME }}
-            password: ${{ secrets.DOCKER_PASSWORD }}
-          env:
-            CONTEXT: .
+#Build's job
+build:
+  needs: sonar
+  name: Build
+  runs-on: ubuntu-latest
+  steps:
+    # Check-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
+    - uses: actions/checkout@v1
+    # Set up JDK 11
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: '11'
+    # Cache Maven packages
+    - name: Cache Maven packages
+      uses: actions/cache@v1
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    # Build the application using Maven
+    - name: Build with Maven
+      run: mvn -B package -DskipTests --file pom.xml
+    # Ensure the JAR exists and then build & push Docker image
+    - name: Build & push Docker image
+      uses: mr-smithers-excellent/docker-build-push@v6
+      with:
+        image: juangomez112/lab2virtual-v2
+        tags: latest
+        registry: docker.io
+        dockerfile: Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      # Extra argument to make sure the correct JAR is used as context
+      context: .
